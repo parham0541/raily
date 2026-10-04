@@ -1,0 +1,43 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "raily-windows-x64.zip"
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: raily-windows-x64
+          path: raily-windows-x64.zip
